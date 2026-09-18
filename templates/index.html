@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>ProcessIQ — Control Tower</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+
+<div class="tower">
+
+  <aside class="deck-nav">
+    <div class="deck-nav__brand">
+      <span class="deck-nav__mark">PIQ</span>
+      <div>
+        <div class="deck-nav__title">ProcessIQ</div>
+        <div class="deck-nav__subtitle">Control Tower</div>
+      </div>
+    </div>
+
+    <nav class="deck-nav__links">
+      <button class="deck-nav__link is-active" data-view="overview">Overview</button>
+      <button class="deck-nav__link" data-view="processes">Process Registry</button>
+      <button class="deck-nav__link" data-view="ml">Model Insights</button>
+    </nav>
+
+    <div class="deck-nav__dataset">
+      <div class="deck-nav__dataset-label">Dataset</div>
+      <label class="upload-btn">
+        Upload CSV
+        <input type="file" id="csv-upload" accept=".csv" hidden />
+      </label>
+      <button class="reset-btn" id="reset-dataset">Reset to sample data</button>
+      <div class="deck-nav__status" id="dataset-status"></div>
+    </div>
+  </aside>
+
+  <main class="deck-main">
+
+    <!-- OVERVIEW -->
+    <section class="view" id="view-overview">
+      <header class="view__header">
+        <h1>Fleet Overview</h1>
+        <p>Live read of governance health, maturity distribution and readiness gates across every tracked process.</p>
+      </header>
+
+      <div class="stat-strip" id="stat-strip"></div>
+
+      <div class="panel-grid">
+        <div class="panel panel--wide">
+          <div class="panel__head">
+            <h2>Maturity Level Distribution</h2>
+            <span class="panel__hint">Level 1 Initial → Level 5 Optimized</span>
+          </div>
+          <canvas id="chart-maturity"></canvas>
+        </div>
+
+        <div class="panel">
+          <div class="panel__head">
+            <h2>Governance Status</h2>
+          </div>
+          <canvas id="chart-status"></canvas>
+        </div>
+
+        <div class="panel">
+          <div class="panel__head">
+            <h2>Governance Dimensions</h2>
+            <span class="panel__hint">Fleet average, 8 dimensions</span>
+          </div>
+          <canvas id="chart-radar"></canvas>
+        </div>
+
+        <div class="panel">
+          <div class="panel__head">
+            <h2>Maturity by Department</h2>
+          </div>
+          <canvas id="chart-dept"></canvas>
+        </div>
+
+        <div class="panel panel--wide">
+          <div class="panel__head">
+            <h2>Most Frequently Triggered Rules</h2>
+            <span class="panel__hint">Fleet-wide gap frequency</span>
+          </div>
+          <div class="gap-list" id="top-gaps"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- PROCESS REGISTRY -->
+    <section class="view is-hidden" id="view-processes">
+      <header class="view__header">
+        <h1>Process Registry</h1>
+        <p>Search, filter and drill into any process to see its full control-tower readout.</p>
+      </header>
+
+      <div class="registry-toolbar">
+        <input type="search" id="process-search" placeholder="Search by process or department…" />
+        <select id="filter-level">
+          <option value="">All levels</option>
+          <option value="1">Level 1 — Initial</option>
+          <option value="2">Level 2 — Managed</option>
+          <option value="3">Level 3 — Defined</option>
+          <option value="4">Level 4 — Measured</option>
+          <option value="5">Level 5 — Optimized</option>
+        </select>
+        <select id="filter-status">
+          <option value="">All governance statuses</option>
+          <option value="Critical">Critical</option>
+          <option value="Needs Improvement">Needs Improvement</option>
+          <option value="Managed">Managed</option>
+          <option value="Strong">Strong</option>
+        </select>
+      </div>
+
+      <div class="registry-layout">
+        <div class="registry-table-wrap">
+          <table class="registry-table">
+            <thead>
+              <tr>
+                <th>Process</th>
+                <th>Department</th>
+                <th>Maturity</th>
+                <th>Governance</th>
+                <th>Measured</th>
+                <th>Optimized</th>
+                <th>Exceptions</th>
+              </tr>
+            </thead>
+            <tbody id="registry-tbody"></tbody>
+          </table>
+        </div>
+
+        <aside class="detail-panel" id="detail-panel">
+          <div class="detail-panel__empty">Select a process from the registry to open its control-tower readout.</div>
+        </aside>
+      </div>
+    </section>
+
+    <!-- ML INSIGHTS -->
+    <section class="view is-hidden" id="view-ml">
+      <header class="view__header">
+        <h1>Model Insights</h1>
+        <p>RandomForest classifier trained to predict maturity level from the 34 underlying process signals.</p>
+      </header>
+
+      <div class="stat-strip" id="ml-stat-strip"></div>
+
+      <div class="panel-grid">
+        <div class="panel panel--wide">
+          <div class="panel__head">
+            <h2>Feature Importance</h2>
+            <span class="panel__hint">Top 10 signals driving the maturity-level prediction</span>
+          </div>
+          <canvas id="chart-importance"></canvas>
+        </div>
+
+        <div class="panel panel--wide">
+          <div class="panel__head">
+            <h2>Per-Class Performance</h2>
+            <span class="panel__hint">Precision / recall / F1 on the held-out test split</span>
+          </div>
+          <table class="ml-table" id="ml-table"></table>
+        </div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"
+  onerror="this.onerror=null;this.src='https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js';"></script>
+<script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+</body>
+</html>
