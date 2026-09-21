@@ -7,3 +7,6 @@ gunicorn>=23.0
 
 streamlit>=1.36,<2
 
+
+requests>=2.31,<3
+
